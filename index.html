@@ -3,127 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>משחק צלילים ותמונות - כיתה ג'</title>
+    <title>לימוד אנגלית - שלבים</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #e0f7fa; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        .game-card { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); text-align: center; width: 90%; max-width: 450px; border: 5px solid #4fc3f7; }
-        h1 { color: #0277bd; font-size: 1.8rem; margin-bottom: 20px; }
-        
-        .image-display { font-size: 80px; margin-bottom: 10px; background: #f9f9f9; border-radius: 15px; padding: 10px; }
-        
-        .speaker-btn { background: #ff9800; border: none; border-radius: 15px; width: 100%; padding: 15px; cursor: pointer; margin-bottom: 25px; transition: 0.2s; box-shadow: 0 4px #e68a00; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.2rem; color: white; font-weight: bold; }
-        .speaker-btn:hover { background: #fb8c00; }
-        .speaker-btn:active { transform: translateY(4px); box-shadow: 0 0 #e68a00; }
-
-        .options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .option-btn { background: #ffffff; border: 3px solid #b3e5fc; padding: 20px; font-size: 1.6rem; font-weight: bold; border-radius: 15px; cursor: pointer; transition: 0.2s; color: #01579b; }
-        .option-btn:hover { background: #e1f5fe; }
-        .correct { background-color: #c8e6c9 !important; border-color: #4caf50 !important; color: #1b5e20; }
-        .wrong { background-color: #ffcdd2 !important; border-color: #f44336 !important; color: #b71c1c; }
-        
-        .score-badge { margin-top: 25px; background: #0277bd; color: white; padding: 10px 20px; border-radius: 20px; font-size: 1.1rem; display: inline-block; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f4f8; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .game-card { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 450px; border: 4px solid #4a90e2; }
+        .level-badge { background: #4a90e2; color: white; padding: 5px 15px; border-radius: 15px; font-size: 0.9rem; margin-bottom: 10px; display: inline-block; }
+        .image-display { font-size: 70px; margin: 15px 0; }
+        .instruction { font-size: 1.2rem; color: #333; margin-bottom: 15px; font-weight: bold; }
+        .speaker-btn { background: #ff9800; border: none; border-radius: 50%; width: 60px; height: 60px; cursor: pointer; margin-bottom: 20px; font-size: 30px; color: white; box-shadow: 0 4px #e68a00; }
+        .options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .option-btn { background: #fff; border: 2px solid #ddd; padding: 15px; font-size: 1.3rem; border-radius: 12px; cursor: pointer; transition: 0.2s; }
+        .correct { background-color: #c8e6c9 !important; border-color: #4caf50 !important; }
+        .wrong { background-color: #ffcdd2 !important; border-color: #f44336 !important; }
     </style>
 </head>
 <body>
 
-    <div class="game-card">
-        <h1>מה שמעתם בתמונה?</h1>
+<div class="game-card">
+    <div id="levelDisplay" class="level-badge">שלב 1: התאמת תמונה</div>
+    <div id="instruction" class="instruction">מה בתמונה?</div>
+    <div id="imageDisplay" class="image-display">🚗</div>
+    <button class="speaker-btn" onclick="playSound()">🔊</button>
+    <div class="options" id="options"></div>
+</div>
+
+<script>
+    // שלב 1: 5 שאלות של זיהוי
+    const level1 = [
+        { word: "Car", emoji: "🚗", options: ["Car", "Cat", "Cap", "Can"], correct: "Car" },
+        { word: "Dog", emoji: "🐶", options: ["Dig", "Dog", "Dot", "Dad"], correct: "Dog" },
+        { word: "Apple", emoji: "🍎", options: ["Ant", "Arm", "Apple", "Axe"], correct: "Apple" },
+        { word: "Sun", emoji: "☀️", options: ["Sit", "Sun", "Sad", "Six"], correct: "Sun" },
+        { word: "Ball", emoji: "⚽", options: ["Bell", "Ball", "Bill", "Bull"], correct: "Ball" }
+    ];
+
+    // שלב 2: מילים מתחרזות
+    const level2 = [
+        { word: "Cat", emoji: "🐈", options: ["Hat", "Dog", "Sun", "Big"], correct: "Hat", instruction: "מה מתחרז עם Cat?" },
+        { word: "Cake", emoji: "🍰", options: ["Snake", "Ball", "Car", "Book"], correct: "Snake", instruction: "מה מתחרז עם Cake?" },
+        { word: "Frog", emoji: "🐸", options: ["Dog", "Fish", "Blue", "Red"], correct: "Dog", instruction: "מה מתחרז עם Frog?" },
+        { word: "Toy", emoji: "🧸", options: ["Boy", "Apple", "Sky", "Ten"], correct: "Boy", instruction: "מה מתחרז עם Toy?" },
+        { word: "Moon", emoji: "🌙", options: ["Spoon", "Tree", "Pen", "Box"], correct: "Spoon", instruction: "מה מתחרז עם Moon?" }
+    ];
+
+    let currentLevel = 1;
+    let currentIdx = 0;
+    let questions = level1;
+
+    function playSound() {
+        const utterance = new SpeechSynthesisUtterance(questions[currentIdx].word);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.7;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function loadQuestion() {
+        const q = questions[currentIdx];
+        document.getElementById('levelDisplay').innerText = `שלב ${currentLevel}`;
+        document.getElementById('instruction').innerText = q.instruction || "מה שמעתם בתמונה?";
+        document.getElementById('imageDisplay').innerText = q.emoji;
         
-        <!-- תצוגת התמונה (אימוג'י) -->
-        <div class="image-display" id="imageDisplay">🚗</div>
+        const optionsDiv = document.getElementById('options');
+        optionsDiv.innerHTML = '';
         
-        <!-- כפתור השמעה -->
-        <button class="speaker-btn" onclick="playSound()">
-            <span>🔊 לחצו לשמיעה</span>
-        </button>
+        q.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(opt, btn);
+            optionsDiv.appendChild(btn);
+        });
+    }
 
-        <div class="options" id="options">
-            <!-- כפתורי המילים ייווצרו כאן -->
-        </div>
-
-        <div class="score-badge" id="scoreDisplay">נקודות: 0</div>
-    </div>
-
-    <script>
-        // רשימת המילים, האימוג'ים והאופציות
-        const words = [
-            { word: "Car", emoji: "🚗", options: ["Car", "Cat", "Cap", "Can"] },
-            { word: "Dog", emoji: "🐶", options: ["Dig", "Dog", "Dot", "Dad"] },
-            { word: "Apple", emoji: "🍎", options: ["Ant", "Arm", "Apple", "Axe"] },
-            { word: "Sun", emoji: "☀️", options: ["Sit", "Sun", "Sad", "Six"] },
-            { word: "Ball", emoji: "⚽", options: ["Bell", "Ball", "Bill", "Bull"] },
-            { word: "Tree", emoji: "🌳", options: ["Three", "Tree", "Free", "Tea"] },
-            { word: "Book", emoji: "📖", options: ["Back", "Book", "Box", "Bike"] }
-        ];
-
-        let currentIdx = 0;
-        let score = 0;
-
-        function playSound() {
-            const utterance = new SpeechSynthesisUtterance(words[currentIdx].word);
-            utterance.lang = 'en-US';
-            utterance.rate = 0.7; // מהירות איטית להבנה טובה
-            window.speechSynthesis.speak(utterance);
+    function checkAnswer(selected, btn) {
+        const correct = questions[currentIdx].correct;
+        if (selected === correct) {
+            btn.classList.add('correct');
+            setTimeout(nextQuestion, 1000);
+        } else {
+            btn.classList.add('wrong');
         }
+    }
 
-        function loadQuestion() {
-            const current = words[currentIdx];
-            
-            // עדכון התמונה
-            document.getElementById('imageDisplay').innerText = current.emoji;
-            
-            const optionsDiv = document.getElementById('options');
-            optionsDiv.innerHTML = '';
-            
-            // ערבוב האופציות
-            const shuffledOptions = [...current.options].sort(() => Math.random() - 0.5);
-
-            shuffledOptions.forEach(opt => {
-                const btn = document.createElement('button');
-                btn.className = 'option-btn';
-                btn.innerText = opt;
-                btn.onclick = () => checkAnswer(opt, btn);
-                optionsDiv.appendChild(btn);
-            });
+    function nextQuestion() {
+        currentIdx++;
+        if (currentIdx < questions.length) {
+            loadQuestion();
+        } else if (currentLevel === 1) {
+            // מעבר לשלב 2
+            currentLevel = 2;
+            currentIdx = 0;
+            questions = level2;
+            alert("כל הכבוד! עוברים לשלב המילים המתחרזות!");
+            loadQuestion();
+        } else {
+            document.querySelector('.game-card').innerHTML = "<h1>סיימת את כל השלבים! 🎉</h1><button onclick='location.reload()'>שחק שוב</button>";
         }
+    }
 
-        function checkAnswer(selected, btn) {
-            const correct = words[currentIdx].word;
-            if (selected === correct) {
-                btn.classList.add('correct');
-                score += 10;
-                document.getElementById('scoreDisplay').innerText = `נקודות: ${score}`;
-                
-                // צליל הצלחה קטן (אופציונלי)
-                setTimeout(nextQuestion, 1200);
-            } else {
-                btn.classList.add('wrong');
-                // הילד יכול לנסות שוב עד שיצליח
-            }
-        }
-
-        function nextQuestion() {
-            currentIdx++;
-            if (currentIdx < words.length) {
-                loadQuestion();
-            } else {
-                showFinalScreen();
-            }
-        }
-
-        function showFinalScreen() {
-            document.querySelector('.game-card').innerHTML = `
-                <h1 style="font-size: 3rem;">🏆</h1>
-                <h1>כל הכבוד!</h1>
-                <p style="font-size: 1.5rem;">סיימתם את המשחק בהצלחה!</p>
-                <div class="score-badge" style="margin-bottom: 20px;">ציון סופי: ${score}</div>
-                <br>
-                <button onclick="location.reload()" style="padding: 15px 30px; font-size: 1.2rem; background: #4caf50; color: white; border: none; border-radius: 15px; cursor: pointer;">שחקו שוב 🔄</button>
-            `;
-        }
-
-        // התחלת המשחק
-        loadQuestion();
-    </script>
+    loadQuestion();
+</script>
 </body>
 </html>
