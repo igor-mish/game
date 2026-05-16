@@ -1,1 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English ABC & Spelling Game</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f4f8; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow-x: hidden; }
+        .game-card { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 550px; position: relative; z-index: 10; border: 4px solid #4a90e2; }
+        
+        /* Welcome & Instructions Screen */
+        #login-screen input { padding: 12px; font-size: 1.1rem; border-radius: 10px; border: 2px solid #ddd; width: 80%; margin-bottom: 15px; text-align: center; }
+        #login-screen button, .next-btn { padding: 12px 30px; background: #4a90e2; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 1.2rem; font-weight: bold; transition: 0.2s; }
+        #login-screen button:hover, .next-btn:hover { background: #357abd; }
+        .instructions-box { background: #e8f0fe; padding: 15px; border-radius: 12px; text-align: left; margin: 15px 0; font-size: 1rem; color: #333; line-height: 1.5; }
 
+        /* ABC Board Screen */
+        .abc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 10px; margin: 20px 0; max-height: 300px; overflow-y: auto; padding: 5px; }
+        .letter-btn { background: #fff; border: 2px solid #4a90e2; font-size: 1.4rem; font-weight: bold; color: #4a90e2; padding: 12px; border-radius: 10px; cursor: pointer; transition: 0.2s; }
+        .letter-btn.viewed { background: #e8f0fe; border-color: #a4c2f4; color: #a4c2f4; }
+        
+        /* Modal Pop-up for Letter details */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 200; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; text-align: center; max-width: 300px; width: 80%; border: 4px solid #ff9800; }
+        
+        /* Spelling Screen */
+        .spelling-img { font-size: 80px; margin: 15px 0; }
+        .word-slots { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
+        .slot { width: 45px; height: 45px; border-bottom: 4px solid #333; font-size: 1.8rem; font-weight: bold; text-transform: uppercase; display: flex; align-items: center; justify-content: center; }
+        .letters-bank { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+        .bank-btn { padding: 10px 15px; font-size: 1.5rem; font-weight: bold; background: #fff; border: 2px solid #ddd; border-radius: 10px; cursor: pointer; }
+        .correct-slot { color: #4caf50; }
+
+        /* Fireworks */
+        .firework { position: absolute; width: 6px; height: 6px; border-radius: 50%; animation: explode 2s ease-out infinite; z-index: 5; }
+        @keyframes explode {
+            0% { transform: translateY(100vh); opacity: 1; }
+            100% { transform: translateY(20vh); box-shadow: -120px -120px #ff0, 120px -120px #f0f, -120px 120px #0ff, 120px 120px #0f0, 0 -170px #f00, 0 170px #fff; opacity: 0; }
+        }
+        .trophy { font-size: 100px; animation: bounce 1s infinite alternate; }
+        @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.15); } }
+    </style>
+</head>
+<body>
+
+<div id="fireworks-container"></div>
+
+<div class="game-card">
+    <div id="login-screen">
+        <h1 style="color: #4a90e2; margin-top:0;">Welcome to ABC World!</h1>
+        <div class="instructions-box">
+            <strong>Game Instructions:</strong><br>
+            1. Enter your name and click "Start Game".<br>
+            2. <strong>Level 1:</strong> Click on all 26 letters to learn their sounds, words, and pictures.<br>
+            3. <strong>Level 2:</strong> Look at the picture and build the 3-letter words. All 26 letters will appear!
+        </div>
+        <input type="text" id="playerNameInput" placeholder="Enter your name here...">
+        <br>
+        <button onclick="startGame()">Start Game 🎮</button>
+    </div>
+
+    <div id="abc-screen" style="display: none;">
+        <h2 style="color: #4a90e2; margin-top:0;">Level 1: Explore the ABC</h2>
+        <p>Click on every letter from A to Z to unlock Level 2!</p>
+        <div class="abc-grid" id="abcGrid"></div>
+        <p id="abcProgress">Letters unlocked: 0 / 26</p>
+        <button class="next-btn" id="toLevel2Btn" onclick="startLevel2()" style="display: none; width: 100%;">Go to Level 2! 🚀</button>
+    </div>
+
+    <div id="spelling-screen" style="display: none;">
+        <h2 style="color: #4a90e2; margin-top:0;">Level 2: Word Builder</h2>
+        <p id="spellingProgress">Word: 1 / 14</p>
+        <div class="spelling-img" id="spellingImg"></div>
+        <div class="word-slots" id="wordSlots"></div>
+        <div class="letters-bank" id="lettersBank"></div>
+    </div>
+</div>
+
+<div class="modal" id="letterModal">
+    <div class="modal-content">
+        <h1 id="modalLetter" style="font-size: 4rem; color: #ff9800; margin: 0;">A</h1>
+        <div id="modalEmoji" style="font-size: 5rem; margin: 10px 0;">🍎</div>
+        <h2 id="modalWord" style="font-size: 2rem; color: #333; margin: 0 0 20px 0;">Apple</h2>
+        <button class="next-btn" onclick="closeModal()">Awesome! 👍</button>
+    </div>
+</div>
+
+<script>
+    let playerName = "";
+    let viewedLetters = new Set();
+    let currentWordIdx = 0;
+    let currentLetterPos = 0;
+
+    const alphabet = [
+        { l: "A", w: "Apple", e: "🍎" }, { l: "B", w: "Ball", e: "⚽" }, { l: "C", w: "Cat", e: "🐱" },
+        { l: "D", w: "Dog", e: "🐶" }, { l: "E", w: "Elephant", e: "🐘" }, { l: "F", w: "Fish", e: "🐟" },
+        { l: "G", w: "Grapes", e: "🍇" }, { l: "H", w: "Hat", e: "🎩" }, { l: "I", w: "Ice", e: "🧊" },
+        { l: "J", w: "Juice", e: "🧃" }, { l: "K", w: "Kite", e: "🪁" }, { l: "L", w: "Lion", e: "🦁" },
+        { l: "M", w: "Milk", e: "🥛" }, { l: "N", w: "Nest", e: "🪹" }, { l: "O", w: "Orange", e: "🍊" },
+        { l: "P", w: "Pen", e: "🖊️" }, { l: "Q", w: "Queen", e: "👸" }, { l: "R", w: "Ring", e: "💍" },
+        { l: "S", w: "Sun", e: "☀️" }, { l: "T", w: "Tree", e: "🌳" }, { l: "U", w: "Umbrella", e: "☂️" },
+        { l: "V", w: "Van", e: "🚐" }, { l: "W", w: "Water", e: "💧" }, { l: "X", w: "X-ray", e: "🩻" },
+        { l: "Y", w: "Yo-yo", e: "🪀" }, { l: "Z", w: "Zebra", e: "🦓" }
+    ];
+
+    const spellingWords = [
+        { word: "CAT", emoji: "🐱" },
+        { word: "BED", emoji: "🛏️" },
+        { word: "PIG", emoji: "🐷" },
+        { word: "JAM", emoji: "🫙" },
+        { word: "SUN", emoji: "☀️" },
+        { word: "FLY", emoji: "🪰" },
+        { word: "COW", emoji: "🐄" },
+        { word: "BOX", emoji: "📦" },
+        { word: "VET", emoji: "🩺" },
+        { word: "ZIP", emoji: "🤐" },
+        { word: "HEN", emoji: "🐔" },
+        { word: "KID", emoji: "👦" },
+        { word: "RUG", emoji: "🪵" },
+        { word: "QUIZ", emoji: "❓" }
+    ];
+
+    function speak(text) {
+        try {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); 
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = 'en-US';
+                u.rate = 1.0;
+                window.speechSynthesis.speak(u);
+            }
+        } catch (error) {
+            console.log("Speech failed:", error);
+        }
+    }
+
+    function playErrorSound() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const audioCtx = new AudioContext();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(130, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.3);
+        } catch (e) {
+            console.log("Sound error:", e);
+        }
+    }
+
+    function startGame() {
+        const input = document.getElementById('playerNameInput');
+        if (!input || input.value.trim() === "") {
+            alert("Please enter your name!");
+            return;
+        }
+        playerName = input.value;
+        document.getElementById('login-screen').style.display = "none";
+        document.getElementById('abc-screen').style.display = "block";
+        buildAbcGrid();
+    }
+
+    function buildAbcGrid() {
+        const grid = document.getElementById('abcGrid');
+        grid.innerHTML = "";
+        alphabet.forEach(item => {
+            const btn = document.createElement('button');
+            btn.className = 'letter-btn';
+            btn.innerText = item.l;
+            btn.id = `btn-${item.l}`;
+            btn.onclick = () => openLetter(item);
+            grid.appendChild(btn);
+        });
+    }
+
+    function openLetter(item) {
+        document.getElementById('modalLetter').innerText = item.l;
+        document.getElementById('modalEmoji').innerText = item.e;
+        document.getElementById('modalWord').innerText = item.w;
+        document.getElementById('letterModal').style.display = 'flex';
+        
+        speak(`${item.l} is for ${item.w}`);
+
+        viewedLetters.add(item.l);
+        document.getElementById(`btn-${item.l}`).classList.add('viewed');
+        document.getElementById('abcProgress').innerText = `Letters unlocked: ${viewedLetters.size} / 26`;
+
+        if (viewedLetters.size === 26) {
+            document.getElementById('toLevel2Btn').style.display = 'block';
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('letterModal').style.display = 'none';
+    }
+
+    function startLevel2() {
+        document.getElementById('abc-screen').style.display = "none";
+        document.getElementById('spelling-screen').style.display = "block";
+        loadSpellingQuestion();
+    }
+
+    function loadSpellingQuestion() {
+        currentLetterPos = 0;
+        const currentData = spellingWords[currentWordIdx];
+        document.getElementById('spellingProgress').innerText = `Word: ${currentWordIdx + 1} / ${spellingWords.length}`;
+        document.getElementById('spellingImg').innerText = currentData.emoji;
+        
+        const slotsDiv = document.getElementById('wordSlots');
+        slotsDiv.innerHTML = "";
+        for (let i = 0; i < currentData.word.length; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'slot';
+            slot.id = `slot-${i}`;
+            slotsDiv.appendChild(slot);
+        }
+
+        let shuffledLetters = currentData.word.split('');
+        shuffledLetters.sort(() => Math.random() - 0.5);
+        if (shuffledLetters.join('') === currentData.word && shuffledLetters.length > 1) {
+            shuffledLetters.reverse();
+        }
+
+        const bankDiv = document.getElementById('lettersBank');
+        bankDiv.innerHTML = "";
+        shuffledLetters.forEach(ltr => {
+            const btn = document.createElement('button');
+            btn.className = 'bank-btn';
+            btn.innerText = ltr;
+            btn.onclick = () => handleBankClick(ltr, btn);
+            bankDiv.appendChild(btn);
+        });
+    }
+
+    function handleBankClick(letter, btn) {
+        const currentData = spellingWords[currentWordIdx];
+        const expectedLetter = currentData.word[currentLetterPos];
+
+        if (letter === expectedLetter) {
+            document.getElementById(`slot-${currentLetterPos}`).innerText = letter;
+            document.getElementById(`slot-${currentLetterPos}`).classList.add('correct-slot');
+            btn.style.visibility = 'hidden';
+            speak(letter);
+            currentLetterPos++;
+
+            if (currentLetterPos === currentData.word.length) {
+                setTimeout(() => {
+                    speak(currentData.word);
+                    setTimeout(() => {
+                        currentWordIdx++;
+                        if (currentWordIdx < spellingWords.length) {
+                            loadSpellingQuestion();
+                        } else {
+                            showWinScreen();
+                        }
+                    }, 2000); 
+                }, 500);
+            }
+        } else {
+            playErrorSound();
+            btn.style.borderColor = '#f44336';
+            btn.style.backgroundColor = '#ffcdd2';
+            setTimeout(() => {
+                btn.style.borderColor = '#ddd';
+                btn.style.backgroundColor = '#fff';
+            }, 500);
+        }
+    }
+
+    function showWinScreen() {
+        for(let i=0; i<25; i++) {
+            const f = document.createElement('div');
+            f.className = 'firework';
+            f.style.left = Math.random() * 100 + 'vw';
+            f.style.animationDelay = Math.random() * 2 + 's';
+            f.style.backgroundColor = ['#ff0', '#f0f', '#0ff', '#f00', '#fff'][Math.floor(Math.random()*5)];
+            document.getElementById('fireworks-container').appendChild(f);
+        }
+
+        document.querySelector('.game-card').innerHTML = `
+            <div class="trophy">🏆</div>
+            <h1 style="color: #4a90e2; font-size: 2.2rem; margin: 10px 0;">Great job ${playerName}, you won!</h1>
+            <p style="font-size: 1.2rem; color: #555;">You completed all the English requirements perfectly!</p>
+            <button onclick="location.reload()" style="padding: 15px 30px; background: #4caf50; color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 1.1rem; font-weight: bold;">Play Again 🔄</button>
+        `;
+    }
+</script>
+</body>
+</html>
