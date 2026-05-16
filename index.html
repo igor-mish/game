@@ -121,15 +121,20 @@
     ];
 
     function speak(text) {
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'en-US';
-        u.rate = 1.0;
-        window.speechSynthesis.speak(u);
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); // Stop any previous speech
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'en-US';
+            u.rate = 1.0;
+            window.speechSynthesis.speak(u);
+        }
     }
 
     function playErrorSound() {
         try {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const audioCtx = new AudioContext();
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
             oscillator.type = 'sawtooth';
@@ -147,7 +152,7 @@
 
     function startGame() {
         const input = document.getElementById('playerNameInput');
-        if (input.value.trim() === "") {
+        if (!input || input.value.trim() === "") {
             alert("Please enter your name!");
             return;
         }
@@ -161,59 +166,3 @@
         const grid = document.getElementById('abcGrid');
         grid.innerHTML = "";
         alphabet.forEach(item => {
-            const btn = document.createElement('button');
-            btn.className = 'letter-btn';
-            btn.innerText = item.l;
-            btn.id = `btn-${item.l}`;
-            btn.onclick = () => openLetter(item);
-            grid.appendChild(btn);
-        });
-    }
-
-    function openLetter(item) {
-        document.getElementById('modalLetter').innerText = item.l;
-        document.getElementById('modalEmoji').innerText = item.e;
-        document.getElementById('modalWord').innerText = item.w;
-        document.getElementById('letterModal').style.display = 'flex';
-        
-        speak(`${item.l} is for ${item.w}`);
-
-        viewedLetters.add(item.l);
-        document.getElementById(`btn-${item.l}`).classList.add('viewed');
-        document.getElementById('abcProgress').innerText = `Letters unlocked: ${viewedLetters.size} / 26`;
-
-        if (viewedLetters.size === 26) {
-            document.getElementById('toLevel2Btn').style.display = 'block';
-        }
-    }
-
-    function closeModal() {
-        document.getElementById('letterModal').style.display = 'none';
-    }
-
-    function startLevel2() {
-        document.getElementById('abc-screen').style.display = "none";
-        document.getElementById('spelling-screen').style.display = "block";
-        loadSpellingQuestion();
-    }
-
-    function loadSpellingQuestion() {
-        currentLetterPos = 0;
-        const currentData = spellingWords[currentWordIdx];
-        document.getElementById('spellingProgress').innerText = `Word: ${currentWordIdx + 1} / ${spellingWords.length}`;
-        document.getElementById('spellingImg').innerText = currentData.emoji;
-        
-        const slotsDiv = document.getElementById('wordSlots');
-        slotsDiv.innerHTML = "";
-        for (let i = 0; i < currentData.word.length; i++) {
-            const slot = document.createElement('div');
-            slot.className = 'slot';
-            slot.id = `slot-${i}`;
-            slotsDiv.appendChild(slot);
-        }
-
-        // FIXED: Pure, lightweight shuffle that will absolutely never crash or hang the script
-        let shuffledLetters = currentData.word.split('');
-        shuffledLetters.sort(() => Math.random() - 0.5);
-        
-        // Quick guarantee it
