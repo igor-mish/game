@@ -69,7 +69,7 @@
 
     <div id="spelling-screen" style="display: none;">
         <h2 style="color: #4a90e2; margin-top:0;">Level 2: Word Builder</h2>
-        <p id="spellingProgress">Word: 1 / 9</p>
+        <p id="spellingProgress">Word: 1 / 14</p>
         <div class="spelling-img" id="spellingImg"></div>
         <div class="word-slots" id="wordSlots"></div>
         <div class="letters-bank" id="lettersBank"></div>
@@ -103,51 +103,45 @@
         { l: "Y", w: "Yo-yo", e: "🪀" }, { l: "Z", w: "Zebra", e: "🦓" }
     ];
 
-    // Level 2: 9 CVC words containing ALL 26 letters of the alphabet
     const spellingWords = [
-        { word: "CAT", emoji: "🐱", bank: ["A", "T", "C"] }, // A, C, T
-        { word: "BED", emoji: "🛏️", bank: ["D", "B", "E"] }, // B, D, E
-        { word: "PIG", emoji: "🐷", bank: ["G", "P", "I"] }, // G, I, P
-        { word: "JAM", emoji: "🍓", bank: ["M", "J", "A"] }, // J, M (A repeat)
-        { word: "SUN", emoji: "☀️", bank: ["N", "S", "U"] }, // N, S, U
-        { word: "FLY", emoji: "🪰", bank: ["Y", "F", "L"] }, // F, L, Y
-        { word: "COW", emoji: "🐄", bank: ["O", "C", "W"] }, // O, W (C repeat)
-        { word: "BOX", emoji: "📦", bank: ["X", "B", "O"] }, // X (B, O repeat)
-        { word: "VET", emoji: "🩺", bank: ["V", "E", "T"] }, // V (E, T repeat)
-        { word: "ZIP", emoji: "🤐", bank: ["Z", "I", "P"] }, // Z (I, P repeat)
-        { word: "HEN", emoji: "🐔", bank: ["H", "E", "N"] }, // H (E, N repeat)
-        { word: "KID", emoji: "👦", bank: ["K", "I", "D"] }, // K (I, D repeat)
-        { word: "RUG", emoji: "🪵", bank: ["R", "U", "G"] }, // R (U, G repeat)
-        { word: "QUIZ", emoji: "❓", bank: ["Q", "U", "I", "Z"] } // Q (U, I, Z repeat)
+        { word: "CAT", emoji: "🐱" },
+        { word: "BED", emoji: "🛏️" },
+        { word: "PIG", emoji: "🐷" },
+        { word: "JAM", emoji: "🫙" },
+        { word: "SUN", emoji: "☀️" },
+        { word: "FLY", emoji: "🪰" },
+        { word: "COW", emoji: "🐄" },
+        { word: "BOX", emoji: "📦" },
+        { word: "VET", emoji: "🩺" },
+        { word: "ZIP", emoji: "🤐" },
+        { word: "HEN", emoji: "🐔" },
+        { word: "KID", emoji: "👦" },
+        { word: "RUG", emoji: "🪵" },
+        { word: "QUIZ", emoji: "❓" }
     ];
 
     function speak(text) {
         const u = new SpeechSynthesisUtterance(text);
         u.lang = 'en-US';
-        u.rate = 0.8;
+        u.rate = 1.0; // FIXED: Increased spelling rate from 0.8 to 1.0 for clearer, faster pronunciation
         window.speechSynthesis.speak(u);
     }
 
-    // Audio context function to play error buzzer sound dynamically
     function playErrorSound() {
         try {
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
-            
             oscillator.type = 'sawtooth';
-            oscillator.frequency.setValueAtTime(130, audioCtx.currentTime); // Low frequency for buzzer
-            
+            oscillator.frequency.setValueAtTime(130, audioCtx.currentTime);
             gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-            
             oscillator.connect(gainNode);
             gainNode.connect(audioCtx.destination);
-            
             oscillator.start();
             oscillator.stop(audioCtx.currentTime + 0.3);
         } catch (e) {
-            console.log("Audio not supported yet");
+            console.log("Audio not supported");
         }
     }
 
@@ -163,127 +157,4 @@
         buildAbcGrid();
     }
 
-    function buildAbcGrid() {
-        const grid = document.getElementById('abcGrid');
-        grid.innerHTML = "";
-        alphabet.forEach(item => {
-            const btn = document.createElement('button');
-            btn.className = 'letter-btn';
-            btn.innerText = item.l;
-            btn.id = `btn-${item.l}`;
-            btn.onclick = () => openLetter(item);
-            grid.appendChild(btn);
-        });
-    }
-
-    function openLetter(item) {
-        document.getElementById('modalLetter').innerText = item.l;
-        document.getElementById('modalEmoji').innerText = item.e;
-        document.getElementById('modalWord').innerText = item.w;
-        document.getElementById('letterModal').style.display = 'flex';
-        
-        speak(`${item.l} is for ${item.w}`);
-
-        viewedLetters.add(item.l);
-        document.getElementById(`btn-${item.l}`).classList.add('viewed');
-        document.getElementById('abcProgress').innerText = `Letters unlocked: ${viewedLetters.size} / 26`;
-
-        if (viewedLetters.size === 26) {
-            document.getElementById('toLevel2Btn').style.display = 'block';
-        }
-    }
-
-    function closeModal() {
-        document.getElementById('letterModal').style.display = 'none';
-    }
-
-    function startLevel2() {
-        document.getElementById('abc-screen').style.display = "none";
-        document.getElementById('spelling-screen').style.display = "block";
-        loadSpellingQuestion();
-    }
-
-    function loadSpellingQuestion() {
-        currentLetterPos = 0;
-        const currentData = spellingWords[currentWordIdx];
-        document.getElementById('spellingProgress').innerText = `Word: ${currentWordIdx + 1} / ${spellingWords.length}`;
-        document.getElementById('spellingImg').innerText = currentData.emoji;
-        
-        const slotsDiv = document.getElementById('wordSlots');
-        slotsDiv.innerHTML = "";
-        for (let i = 0; i < currentData.word.length; i++) {
-            const slot = document.createElement('div');
-            slot.className = 'slot';
-            slot.id = `slot-${i}`;
-            slotsDiv.appendChild(slot);
-        }
-
-        const bankDiv = document.getElementById('lettersBank');
-        bankDiv.innerHTML = "";
-        currentData.bank.forEach(ltr => {
-            const btn = document.createElement('button');
-            btn.className = 'bank-btn';
-            btn.innerText = ltr;
-            btn.onclick = () => handleBankClick(ltr, btn);
-            bankDiv.appendChild(btn);
-        });
-    }
-
-    function handleBankClick(letter, btn) {
-        const currentData = spellingWords[currentWordIdx];
-        const expectedLetter = currentData.word[currentLetterPos];
-
-        if (letter === expectedLetter) {
-            document.getElementById(`slot-${currentLetterPos}`).innerText = letter;
-            document.getElementById(`slot-${currentLetterPos}`).classList.add('correct-slot');
-            btn.style.visibility = 'hidden';
-            speak(letter);
-            currentLetterPos++;
-
-            if (currentLetterPos === currentData.word.length) {
-                // Sleep effect: Wait 600ms, speak the full word, then move to next word
-                setTimeout(() => {
-                    speak(currentData.word);
-                    
-                    setTimeout(() => {
-                        currentWordIdx++;
-                        if (currentWordIdx < spellingWords.length) {
-                            loadSpellingQuestion();
-                        } else {
-                            showWinScreen();
-                        }
-                    }, 1200); // Wait for speech to finish before loading next word
-                }, 600);
-            }
-        } else {
-            // Wrong letter picked
-            playErrorSound();
-            btn.style.borderColor = '#f44336';
-            btn.style.backgroundColor = '#ffcdd2';
-            setTimeout(() => {
-                btn.style.borderColor = '#ddd';
-                btn.style.backgroundColor = '#fff';
-            }, 500);
-        }
-    }
-
-    function showWinScreen() {
-        for(let i=0; i<25; i++) {
-            const f = document.createElement('div');
-            f.className = 'firework';
-            f.style.left = Math.random() * 100 + 'vw';
-            f.style.animationDelay = Math.random() * 2 + 's';
-            f.style.backgroundColor = ['#ff0', '#f0f', '#0ff', '#f00', '#fff'][Math.floor(Math.random()*5)];
-            document.getElementById('fireworks-container').appendChild(f);
-        }
-
-        document.querySelector('.game-card').innerHTML = `
-            <div class="trophy">🏆</div>
-            <h1 style="color: #4a90e2; font-size: 2.2rem; margin: 10px 0;">Great job ${playerName}, you won!</h1>
-            <p style="font-size: 1.2rem; color: #555;">You completed all the English requirements perfectly!</p>
-            <button onclick="location.reload()" style="padding: 15px 30px; background: #4caf50; color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 1.1rem; font-weight: bold;">Play Again 🔄</button>
-        `;
-    }
-</script>
-</body>
-</html>
+    function buildAbcGrid
