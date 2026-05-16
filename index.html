@@ -52,7 +52,7 @@
             <strong>Game Instructions:</strong><br>
             1. Enter your name and click "Start Game".<br>
             2. <strong>Level 1:</strong> Click on all 26 letters to learn their sounds, words, and pictures.<br>
-            3. <strong>Level 2:</strong> Look at the picture and build the 3-letter word by clicking the right letters!
+            3. <strong>Level 2:</strong> Look at the picture and build the 3-letter words. All 26 letters will appear!
         </div>
         <input type="text" id="playerNameInput" placeholder="Enter your name here...">
         <br>
@@ -69,7 +69,7 @@
 
     <div id="spelling-screen" style="display: none;">
         <h2 style="color: #4a90e2; margin-top:0;">Level 2: Word Builder</h2>
-        <p>Click the letters in the correct order to spell the word!</p>
+        <p id="spellingProgress">Word: 1 / 9</p>
         <div class="spelling-img" id="spellingImg"></div>
         <div class="word-slots" id="wordSlots"></div>
         <div class="letters-bank" id="lettersBank"></div>
@@ -99,23 +99,56 @@
         { l: "M", w: "Milk", e: "🥛" }, { l: "N", w: "Nest", e: "🪹" }, { l: "O", w: "Orange", e: "🍊" },
         { l: "P", w: "Pen", e: "🖊️" }, { l: "Q", w: "Queen", e: "👸" }, { l: "R", w: "Ring", e: "💍" },
         { l: "S", w: "Sun", e: "☀️" }, { l: "T", w: "Tree", e: "🌳" }, { l: "U", w: "Umbrella", e: "☂️" },
-        { l: "V", w: "Van", e: "🚐" }, { l: "W", w: "Water", e: "💧" }, { l: "X", w: "Xylophone", e: "🪘" },
+        { l: "V", w: "Van", e: "🚐" }, { l: "W", w: "Water", e: "💧" }, { l: "X", w: "X-ray", e: "🩻" },
         { l: "Y", w: "Yo-yo", e: "🪀" }, { l: "Z", w: "Zebra", e: "🦓" }
     ];
 
+    // Level 2: 9 CVC words containing ALL 26 letters of the alphabet
     const spellingWords = [
-        { word: "CAT", emoji: "🐱", bank: ["A", "T", "C"] },
-        { word: "CAR", emoji: "🚗", bank: ["R", "C", "A"] },
-        { word: "DOG", emoji: "🐶", bank: ["O", "G", "D"] },
-        { word: "SUN", emoji: "☀️", bank: ["U", "N", "S"] },
-        { word: "BED", emoji: "🛏️", bank: ["D", "B", "E"] }
+        { word: "CAT", emoji: "🐱", bank: ["A", "T", "C"] }, // A, C, T
+        { word: "BED", emoji: "🛏️", bank: ["D", "B", "E"] }, // B, D, E
+        { word: "PIG", emoji: "🐷", bank: ["G", "P", "I"] }, // G, I, P
+        { word: "JAM", emoji: "🍓", bank: ["M", "J", "A"] }, // J, M (A repeat)
+        { word: "SUN", emoji: "☀️", bank: ["N", "S", "U"] }, // N, S, U
+        { word: "FLY", emoji: "🪰", bank: ["Y", "F", "L"] }, // F, L, Y
+        { word: "COW", emoji: "🐄", bank: ["O", "C", "W"] }, // O, W (C repeat)
+        { word: "BOX", emoji: "📦", bank: ["X", "B", "O"] }, // X (B, O repeat)
+        { word: "VET", emoji: "🩺", bank: ["V", "E", "T"] }, // V (E, T repeat)
+        { word: "ZIP", emoji: "🤐", bank: ["Z", "I", "P"] }, // Z (I, P repeat)
+        { word: "HEN", emoji: "🐔", bank: ["H", "E", "N"] }, // H (E, N repeat)
+        { word: "KID", emoji: "👦", bank: ["K", "I", "D"] }, // K (I, D repeat)
+        { word: "RUG", emoji: "🪵", bank: ["R", "U", "G"] }, // R (U, G repeat)
+        { word: "QUIZ", emoji: "❓", bank: ["Q", "U", "I", "Z"] } // Q (U, I, Z repeat)
     ];
 
     function speak(text) {
         const u = new SpeechSynthesisUtterance(text);
         u.lang = 'en-US';
-        u.rate = 0.75;
+        u.rate = 0.8;
         window.speechSynthesis.speak(u);
+    }
+
+    // Audio context function to play error buzzer sound dynamically
+    function playErrorSound() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(130, audioCtx.currentTime); // Low frequency for buzzer
+            
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.3);
+        } catch (e) {
+            console.log("Audio not supported yet");
+        }
     }
 
     function startGame() {
@@ -173,11 +206,12 @@
     function loadSpellingQuestion() {
         currentLetterPos = 0;
         const currentData = spellingWords[currentWordIdx];
+        document.getElementById('spellingProgress').innerText = `Word: ${currentWordIdx + 1} / ${spellingWords.length}`;
         document.getElementById('spellingImg').innerText = currentData.emoji;
         
         const slotsDiv = document.getElementById('wordSlots');
         slotsDiv.innerHTML = "";
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < currentData.word.length; i++) {
             const slot = document.createElement('div');
             slot.className = 'slot';
             slot.id = `slot-${i}`;
@@ -206,21 +240,30 @@
             speak(letter);
             currentLetterPos++;
 
-            if (currentLetterPos === 3) {
+            if (currentLetterPos === currentData.word.length) {
+                // Sleep effect: Wait 600ms, speak the full word, then move to next word
                 setTimeout(() => {
                     speak(currentData.word);
-                    currentWordIdx++;
-                    if (currentWordIdx < spellingWords.length) {
-                        loadSpellingQuestion();
-                    } else {
-                        showWinScreen();
-                    }
-                }, 1000);
+                    
+                    setTimeout(() => {
+                        currentWordIdx++;
+                        if (currentWordIdx < spellingWords.length) {
+                            loadSpellingQuestion();
+                        } else {
+                            showWinScreen();
+                        }
+                    }, 1200); // Wait for speech to finish before loading next word
+                }, 600);
             }
         } else {
-            speak("Try again");
+            // Wrong letter picked
+            playErrorSound();
             btn.style.borderColor = '#f44336';
-            setTimeout(() => btn.style.borderColor = '#ddd', 500);
+            btn.style.backgroundColor = '#ffcdd2';
+            setTimeout(() => {
+                btn.style.borderColor = '#ddd';
+                btn.style.backgroundColor = '#fff';
+            }, 500);
         }
     }
 
