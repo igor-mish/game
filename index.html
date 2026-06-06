@@ -6,21 +6,21 @@
     <title>English ABC & Spelling Game - By Talya Mishkin</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f4f8; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow-x: hidden; }
-        .game-card { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 550px; position: relative; z-index: 10; border: 4px solid #4a90e2; }
+        .game-card { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 95%; max-width: 650px; position: relative; z-index: 10; border: 4px solid #4a90e2; }
         
         /* Student Info Header */
-        .student-info { background: #fff9db; border: 2px dashed #f59f00; padding: 10px; border-radius: 12px; margin-bottom: 20px; font-size: 1.1rem; color: #f08c00; font-weight: bold; line-height: 1.4; text-align: center; }
+        .student-info { background: #fff9db; border: 2px dashed #f59f00; padding: 12px; border-radius: 12px; margin-bottom: 20px; font-size: 1.1rem; color: #f08c00; font-weight: bold; line-height: 1.4; text-align: center; }
 
-        /* Welcome & Instructions Screen */
+        /* Welcome & Side-by-Side Instructions Screen */
         #login-screen input { padding: 12px; font-size: 1.1rem; border-radius: 10px; border: 2px solid #ddd; width: 80%; margin-bottom: 15px; text-align: center; }
         #login-screen button, .next-btn { padding: 12px 30px; background: #4a90e2; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 1.2rem; font-weight: bold; transition: 0.2s; }
         #login-screen button:hover, .next-btn:hover { background: #357abd; }
         
-        .instructions-container { display: flex; gap: 10px; justify-content: center; margin-bottom: 5px; }
-        .tab-btn { padding: 8px 15px; border: none; background: #e2e8f0; font-weight: bold; border-radius: 8px 8px 0 0; cursor: pointer; color: #4a5568; }
-        .tab-btn.active { background: #e8f0fe; color: #1a73e8; border-bottom: 2px solid #1a73e8; }
-        .instructions-box { background: #e8f0fe; padding: 15px; border-radius: 0 0 12px 12px; text-align: left; margin-bottom: 20px; font-size: 0.95rem; color: #333; line-height: 1.5; min-height: 110px; }
-        .instructions-box.rtl { text-align: right; direction: rtl; }
+        /* Two Columns Layout */
+        .instructions-row { display: flex; gap: 15px; margin: 20px 0; text-align: left; }
+        .instruction-col { flex: 1; background: #e8f0fe; padding: 15px; border-radius: 12px; font-size: 0.95rem; color: #333; line-height: 1.5; box-shadow: inset 0 0 5px rgba(0,0,0,0.05); }
+        .instruction-col.rtl { text-align: right; direction: rtl; background: #f0f4ff; }
+        .col-title { font-weight: bold; font-size: 1.05rem; color: #1a73e8; margin-bottom: 8px; border-bottom: 1px solid #b4d2ff; padding-bottom: 4px; }
 
         /* ABC Board Screen */
         .abc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 10px; margin: 20px 0; max-height: 300px; overflow-y: auto; padding: 5px; }
@@ -47,6 +47,11 @@
         }
         .trophy { font-size: 100px; animation: bounce 1s infinite alternate; }
         @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.15); } }
+
+        /* Responsive Layout for Mobile Phones */
+        @media (max-width: 600px) {
+            .instructions-row { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
@@ -55,30 +60,27 @@
 
 <div class="game-card">
     <div class="student-info" id="studentInfoHeader">
-        🎓 Student Name: Talya Mishkin [cite: 15]<br>
-        🏫 Class: Gimnel 4 [cite: 15]
+        🎓 Student Name: Talya Mishkin<br>
+        🏫 Class: Gimnel 4
     </div>
 
     <div id="login-screen">
         <h1 style="color: #4a90e2; margin-top:0;">Welcome to ABC World!</h1>
         
-        <div class="instructions-container">
-            <button class="tab-btn active" id="enTab" onclick="switchTab('en')">English Instructions 🇬🇧</button>
-            <button class="tab-btn" id="heTab" onclick="switchTab('he')">הוראות בעברית 🇮🇱</button>
-        </div>
-        
-        <div class="instructions-box" id="enInstructions">
-            <strong>Game Instructions:</strong> [cite: 6]<br>
-            1. Enter your player name below and click "Start Game".<br>
-            2. <strong>Level 1:</strong> Click on all 26 letters to learn their sounds, words, and pictures. [cite: 5, 9]<br>
-            3. <strong>Level 2:</strong> Look at the picture and build the words. All 26 letters will appear! [cite: 5, 7]
-        </div>
+        <div class="instructions-row">
+            <div class="instruction-col">
+                <div class="col-title">Game Instructions 🇬🇧</div>
+                1. Enter your player name below and click "Start Game".<br>
+                2. <strong>Level 1:</strong> Click on all 26 letters to learn their sounds, words, and pictures.<br>
+                3. <strong>Level 2:</strong> Look at the picture and build the words. All 26 letters will appear!
+            </div>
 
-        <div class="instructions-box rtl" id="heInstructions" style="display: none;">
-            <strong>הוראות המשחק:</strong> [cite: 6]<br>
-            1. הקלידו את שמכם למטה ולחצו על "Start Game".<br>
-            2. <strong>שלב 1:</strong> לחצו על כל 26 האותיות כדי ללמוד את הצליל, המילה והתמונה שלהן. [cite: 5, 9]<br>
-            3. <strong>שלב 2:</strong> הביטו בתמונה והרכיבו את המילה על ידי לחיצה על האותיות בסדר הנכון. [cite: 7]
+            <div class="instruction-col rtl">
+                <div class="col-title">הוראות המשחק 🇮🇱</div>
+                1. הקלידו את שמכם למטה ולחצו על "Start Game".<br>
+                2. <strong>שלב 1:</strong> לחצו על כל 26 האותיות כדי ללמוד את הצליל, המילה והתמונה שלהן.<br>
+                3. <strong>שלב 2:</strong> הביטו בתמונה והרכיבו את המילה על ידי לחיצה על האותיות בסדר הנכון.
+            </div>
         </div>
 
         <input type="text" id="playerNameInput" placeholder="Enter your nickname here...">
@@ -146,25 +148,6 @@
         { word: "RUG", emoji: "🪵" },
         { word: "QUIZ", emoji: "❓" }
     ];
-
-    function switchTab(lang) {
-        const enTab = document.getElementById('enTab');
-        const heTab = document.getElementById('heTab');
-        const enBox = document.getElementById('enInstructions');
-        const heBox = document.getElementById('heInstructions');
-
-        if (lang === 'en') {
-            enTab.classList.add('active');
-            heTab.classList.remove('active');
-            enBox.style.display = 'block';
-            heBox.style.display = 'none';
-        } else {
-            heTab.classList.add('active');
-            enTab.classList.remove('active');
-            heBox.style.display = 'block';
-            enBox.style.display = 'none';
-        }
-    }
 
     function speak(text) {
         try {
@@ -335,7 +318,7 @@
             <h1 style="color: #4a90e2; font-size: 2.2rem; margin: 10px 0;">Great job ${playerName}, you won!</h1>
             <p style="font-size: 1.2rem; color: #555;">You completed all the English requirements perfectly!</p>
             <div style="margin-top: 15px; padding: 10px; background: #e8f0fe; border-radius: 10px; font-weight: bold; color: #1a73e8;">
-                Project Submitted by: Talya Mishkin [cite: 15] (Class: Gimnel 4 [cite: 15])
+                Project Submitted by: Talya Mishkin (Class: Gimnel 4)
             </div>
             <br>
             <button onclick="location.reload()" style="padding: 15px 30px; background: #4caf50; color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 1.1rem; font-weight: bold;">Play Again 🔄</button>
